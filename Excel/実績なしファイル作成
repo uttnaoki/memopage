@@ -1,0 +1,82 @@
+Option Explicit
+ 
+Public Sub createExcelFileTest(newBookName)
+    Dim newBookPath As String
+    Dim newBook As Workbook
+    Dim newSheet As Worksheet
+    
+    MsgBox newBookName
+    
+    '新しいファイルのフルパスを設定
+    newBookPath = ThisWorkbook.Path & "\" & newBookName
+    
+    If Dir(newBookPath) <> "" Then
+        Call rmExcelFile(newBookName)
+    End If
+    
+    '指定したパスにファイルが作成済でないかを確認。
+    If Dir(newBookPath) = "" Then
+        '新しいファイルを作成
+        Set newBook = Workbooks.Add
+        
+        'テンプレシートをコピー
+        ThisWorkbook.Worksheets("template").Copy before:=newBook.Sheets(1)
+        
+        With newBook.Sheets("template")
+           .Name = "自主管理実績届"
+           .Range("A1") = "bbb"
+           .Range("C9") = "ccc"
+        End With
+        Application.DisplayAlerts = False
+        newBook.Sheets("Sheet1").Delete
+        Application.DisplayAlerts = True
+        
+        '新しいファイルをVBAを実行したファイルと同じフォルダ保存
+        newBook.SaveAs newBookPath
+        
+        newBook.Close
+    
+    Else
+        '既に同名のファイルが存在する場合はメッセージを表示
+        MsgBox "既に" & newBookName & "というファイルは存在します。"
+    
+    End If
+End Sub
+
+Public Sub main()
+    Dim newBookName As String
+    newBookName = "test.xlsx"
+    
+    Dim row_offset As Integer
+    
+    Dim thisValue As String
+    
+    'セルをアクティブ
+    Range("B3").Select
+    row_offset = 0
+    '// 空セルまでループ
+    Do
+        '// セル値を取得
+        thisValue = ActiveCell.Offset(row_offset, 0).Value
+        
+        '// セル値が空でない場合
+        If thisValue <> "" Then
+            Call createExcelFileTest(thisValue & ".xlsx")
+        Else
+            '// ループを抜ける
+            Exit Do
+        End If
+        
+        '// ループカウンタを加算
+        row_offset = row_offset + 1
+    Loop
+    
+
+End Sub
+
+
+Public Sub rmExcelFile(bookName)
+    Dim bookPath As String
+    bookPath = ThisWorkbook.Path & "\" & bookName
+    Kill bookPath
+End Sub
